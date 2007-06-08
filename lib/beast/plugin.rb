@@ -133,10 +133,6 @@ module Beast
         returning (name || title.underscore).to_sym do |controller_name|
           view_paths[controller_name] = File.join(plugin_path, 'views').to_s
           tab title, {:controller => controller_name.to_s}.update(options)
-          unless File.exists?(File.join(view_paths[controller_name], 'layouts'))
-            FileUtils.mkdir_p view_paths[controller_name]
-            FileUtils.symlink(File.join(RAILS_ROOT, 'app', 'views', 'layouts'), File.join(view_paths[controller_name], 'layouts'))
-          end
         end
       end
     end
