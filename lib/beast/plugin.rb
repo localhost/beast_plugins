@@ -27,6 +27,12 @@ module Beast
         require 'dispatcher'
         Dispatcher.to_prepare :load_beast_plugins do
           require 'application' unless Object.const_defined?(:ApplicationController)
+          ApplicationHelper.module_eval do
+            def head_extras
+              Beast::Plugin.plugins.collect { |p| p.head_extras.to_s } * "\n"
+            end
+          end
+          
           Beast::Plugin.plugins.clear
           plugins.each do |plugin|
             plugin.to_s.classify.constantize.configure
@@ -136,10 +142,34 @@ module Beast
         end
       end
     end
+    
+    def head_extras
+      @head_extras ||= 
+        (css_files.collect { |f| %(<link href="#{sanitize_path f}" rel="stylesheet" type="text/css" />) } * "\n") + 
+        (js_files.collect  { |f| %(<script src="#{sanitize_path f}" type="text/javascript"></script>)   } * "\n")
+    end
   
+    route :connect, ':asset/:plugin/*paths', :asset => /images|javascripts|stylesheets/, :controller => 'beast/assets', :action => 'show'
+
     plugin_property_source = %w(author version homepage notes plugin_name plugin_path default_options).collect! do |property|
       "def #{property}() self.class.#{property} end"
     end
     eval plugin_property_source * "\n"
+    
+    protected
+      def css_files
+        @css_files ||= Dir[File.join(plugin_path, 'public', 'stylesheets', '*.css')]
+      end
+      
+      def js_files
+        @js_files ||= Dir[File.join(plugin_path, 'public', 'javascripts', '*.js')]
+      end
+      
+      def sanitize_path(path)
+        sanitized = path[plugin_path.size + 7..-1]
+        sanitized.gsub! /^\/([^\/]+)\// do |path|
+          path << plugin_name << '/'
+        end
+      end
   end
 end
