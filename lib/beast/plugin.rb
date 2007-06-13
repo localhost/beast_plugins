@@ -4,10 +4,11 @@ module Beast
     attr_reader :options
 
     @@plugins       = []
+    @@plugin_index  = {}
     @@custom_routes = []
     @@view_paths    = {}
     @@tabs          = []
-    cattr_reader :plugins, :custom_routes, :view_paths, :tabs
+    cattr_reader :plugins, :custom_routes, :view_paths, :tabs, :plugin_index
 
     def initialize
       @options = default_options.dup
@@ -49,6 +50,14 @@ module Beast
         @plugin_path ||= File.join(RAILS_ROOT, 'vendor', 'beast', plugin_name)
       end
 
+      def view_path
+        @view_path ||= File.expand_path(File.join(plugin_path, 'views'))
+      end
+
+      def [](plugin_name)
+        plugin_index[plugin_name]
+      end
+
       plugin_property_source = %w(author version homepage notes).collect! do |property|
         <<-END
           def #{property}(value = nil)
@@ -60,26 +69,26 @@ module Beast
       eval plugin_property_source * "\n"
 
       def configure(&block)
-        self.plugins << new(&block)
+        instance = new(&block)
+        plugins << instance
+        plugin_index[plugin_name] = instance
       end
 
       def default_options
         @default_options ||= {}
       end
       
-      def option(property, default, field_type = :text_field)
+      def option(property, default = nil)
         class_eval <<-END, __FILE__, __LINE__
             def #{property}
-              write_attribute(:options, {}) if read_attribute(:options).nil?
               options[#{property.inspect}].blank? ? #{default.inspect} : options[#{property.inspect}]
             end
             
             def #{property}=(value)
-              write_attribute(:options, {}) if read_attribute(:options).nil?
               options[#{property.inspect}] = value
             end
           END
-        default_options[property] = field_type
+        default_options[property] = default
       end
   
       # Installs the plugin's tables using the schema file in lib/#{plugin_name}/schema.rb
@@ -151,7 +160,7 @@ module Beast
   
     route :connect, ':asset/:plugin/*paths', :asset => /images|javascripts|stylesheets/, :controller => 'beast/assets', :action => 'show'
 
-    plugin_property_source = %w(author version homepage notes plugin_name plugin_path default_options).collect! do |property|
+    plugin_property_source = %w(author version homepage notes plugin_name plugin_path view_path default_options).collect! do |property|
       "def #{property}() self.class.#{property} end"
     end
     eval plugin_property_source * "\n"
