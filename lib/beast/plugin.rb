@@ -27,6 +27,7 @@ module Beast
       def initialize_plugins(*plugins)
         require 'dispatcher'
         Dispatcher.to_prepare :load_beast_plugins do
+          RAILS_DEFAULT_LOGGER.warn ">>>>>>>>>> DISPATCH #{RAILS_ENV}"
           require 'application' unless Object.const_defined?(:ApplicationController)
           ApplicationHelper.module_eval do
             def head_extras
@@ -150,6 +151,10 @@ module Beast
           tab title, {:controller => controller_name.to_s}.update(options)
         end
       end
+      
+      def logger
+        RAILS_DEFAULT_LOGGER
+      end
     end
     
     def head_extras
@@ -164,7 +169,11 @@ module Beast
       "def #{property}() self.class.#{property} end"
     end
     eval plugin_property_source * "\n"
-    
+
+    def logger
+      RAILS_DEFAULT_LOGGER
+    end
+
     protected
       def css_files
         @css_files ||= Dir[File.join(plugin_path, 'public', 'stylesheets', '*.css')]
