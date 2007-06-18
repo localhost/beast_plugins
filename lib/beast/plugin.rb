@@ -27,7 +27,6 @@ module Beast
       def initialize_plugins(*plugins)
         require 'dispatcher'
         Dispatcher.to_prepare :load_beast_plugins do
-          RAILS_DEFAULT_LOGGER.warn ">>>>>>>>>> DISPATCH #{RAILS_ENV}"
           require 'application' unless Object.const_defined?(:ApplicationController)
           ApplicationHelper.module_eval do
             def head_extras
