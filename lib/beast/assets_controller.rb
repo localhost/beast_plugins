@@ -11,7 +11,7 @@ module Beast
           if content_type =~ /^text/
             render :text => IO.read(filename), :content_type => content_type
           else
-            send_file filename, :type => content_type, :disposition => 'inline'
+            send_file filename, :type => content_type, :disposition => 'inline', :stream => false
           end
         else
           head :not_found
