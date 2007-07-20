@@ -18,7 +18,7 @@ Module.class_eval do
       @@class_mixins[klass].uniq!
     end
   end
-  
+
   # add any class mixins that have been registered for this class
   def auto_include!
     mixins = @@class_mixins[name]
