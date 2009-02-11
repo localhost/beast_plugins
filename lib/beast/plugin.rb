@@ -17,9 +17,15 @@ module Beast
     end
     
     def install_routes!
-      mapper = ActionController::Routing::RouteSet::Mapper.new(ActionController::Routing::Routes)
-      self.class.custom_routes.each do |args|
-        mapper.send *args
+      ActionController::Routing::RouteSet.class_eval do
+        def load_routes_with_beast_plugin_routes!
+          load_routes_without_beast_plugin_routes!
+          mapper = self.class::Mapper.new(ActionController::Routing::Routes)
+          Beast::Plugin::custom_routes.each do |args|
+            mapper.send *args
+          end
+        end
+        alias_method_chain :load_routes!, :beast_plugin_routes
       end
     end
 
