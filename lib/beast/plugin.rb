@@ -25,9 +25,9 @@ module Beast
 
     class << self
       def initialize_plugins(*plugins)
-        require 'dispatcher'
+        require_dependency 'dispatcher'
         Dispatcher.to_prepare :load_beast_plugins do
-          require 'application' unless Object.const_defined?(:ApplicationController)
+          require_dependency 'application' unless Object.const_defined?(:ApplicationController)
           ApplicationHelper.module_eval do
             def head_extras
               Beast::Plugin.plugins.collect { |p| p.head_extras.to_s } * "\n"

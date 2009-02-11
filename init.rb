@@ -1,5 +1,12 @@
-Dependencies.load_paths.push *Dir[File.join(RAILS_ROOT, 'vendor', 'beast', '*', 'lib')]
-Dependencies.autoloaded_constants.delete "Beast"
+plugin_path = *Dir[File.join(RAILS_ROOT, 'vendor', 'beast', '*', 'lib')]
+$LOAD_PATH << plugin_path
+if ActiveSupport.const_defined?(:Dependencies)
+  ActiveSupport::Dependencies.load_paths << plugin_path
+  ActiveSupport::Dependencies.autoloaded_constants.delete "Beast"
+else
+  Dependencies.load_paths.push plugin_path
+  Dependencies.autoloaded_constants.delete "Beast"
+end
 
 Module.class_eval do
   # A hash that maps Class names to an array of Modules to mix in when the class is instantiated.
